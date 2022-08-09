@@ -28,33 +28,40 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
-  app.get( "/filteredimage", async ( req, res ) => 
+  app.get( "/filteredimage", async ( req: Request , res: Response ) => 
   {    
-    const image_url = req.query.image_url.toString();
-    
-    if ( !image_url) {
+    const { image_url } :{image_url:string} = req.query;
+    if ( !isImgUrl(image_url)) {
       return res.status(400).send("Please enter a valid url " + image_url);
     }
    
     await filterImageFromURL(image_url)
     .then(function (filtered_image){
-                res.status(200).sendFile(filtered_image, () => {       
+      res.status(200).sendFile(filtered_image, () => {       
                    deleteLocalFiles([filtered_image]);       
                 });   
             }
-          ).catch(function(err){
-                res.status(400).send(err);
+          ).catch(function(error: Error){
+            res.status(400).send(error);
               });  
               
   }); 
+
+  // check image url
+  function isImgUrl(url : any) {
+    if(typeof url !== 'string' || !url || url === "") return false;
+    return(url.match(/^http[^\?]*.(jpg|jpeg|png|bmp)(\?(.*))?$/gmi) != null);
+  }
+
   //! END @TODO1
   
   
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
+  app.get( "/", async (req: Request , res: Response) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
+  
 
   // Start the Server
   app.listen( port, () => {
